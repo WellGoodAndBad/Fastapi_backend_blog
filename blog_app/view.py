@@ -45,7 +45,7 @@ async def post_single(pk: int):
         raise HTTPException(status_code=404, detail="Post not found")
 
 
-@router.get("/update/{pk}", status_code=201, response_model=blg_schm.PostSingle)
+@router.post("/update/{pk}", status_code=201, response_model=blg_schm.PostCreate)
 async def post_create(
         pk: int, item: blg_schm.PostCreate, user: usr_schm.User = Depends(fastapi_users.get_current_active_user)
     ):
@@ -53,8 +53,8 @@ async def post_create(
     if check:
         q_updt = post.update().where((post.c.id == pk) & (post.c.owner_id == user.id)).values(**{'title': item.posts_blog_title,
                                                                                                  'text_blog': item.posts_blog_text_blog})
-        post_updt = await db.database.execute(q_updt)
-        return dict(post_updt)
+        await db.database.execute(q_updt)
+        return {**item.dict(), "id": pk, "owner_id": {"id": user.id}}
 
 
 @router.get("/delete/{pk}", response_class=ORJSONResponse)
